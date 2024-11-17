@@ -53,38 +53,33 @@ class _CameraViewState extends State<CameraView> {
     return Scaffold(
       body: Column(
         children: [
-          Expanded(
-              flex: 3,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: ClipRect(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _cameraController.value.previewSize?.height,
-                      height: _cameraController.value.previewSize?.width,
-                      child: Transform(
-                        alignment: Alignment.center,
-                        transform: isRearCameraSelected
-                            ? Matrix4.identity()
-                            : Matrix4.rotationY(3.14159), // Flip for front c
-                        child: CameraPreview(_cameraController),
-                      ),
-                    ),
+          Container(
+            child: AspectRatio(
+              aspectRatio: 0.6,
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _cameraController.value.previewSize?.height,
+                  height: _cameraController.value.previewSize?.width,
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: isRearCameraSelected
+                        ? Matrix4.identity()
+                        : Matrix4.rotationY(3.14159), // Flip for front c
+                    child: CameraPreview(_cameraController),
                   ),
                 ),
-              )),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: () async {
-                setState(() {
-                  isRearCameraSelected = !isRearCameraSelected;
-                });
-                setupCamera(cameras[isRearCameraSelected ? 0 : 1]);
-              },
-              child: const Text('Switch Camera'),
+              ),
             ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              setState(() {
+                isRearCameraSelected = !isRearCameraSelected;
+              });
+              setupCamera(cameras[isRearCameraSelected ? 0 : 1]);
+            },
+            child: const Text('Switch Camera'),
           ),
         ],
       ),

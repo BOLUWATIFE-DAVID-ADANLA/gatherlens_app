@@ -22,6 +22,8 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_animate: ^4.5.0
   cupertino_icons: ^1.0.8
+  supabase_flutter: ^2.8.0
+  crypto: 
 
 dev_dependencies:
   flutter_test:
