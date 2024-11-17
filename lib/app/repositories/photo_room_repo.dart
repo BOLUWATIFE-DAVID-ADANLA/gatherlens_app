@@ -6,12 +6,12 @@ class PhotoRoomRepository {
   final Supabase _supabase;
   PhotoRoomRepository(this._supabase);
 
-// create a new photo room
-  Future<void> createPhotoRoom(String roomId, List<String>? images) async {
+// create a new photo room and mark it with the id of the user that created it
+  Future<void> createPhotoRoom(String roomId, String userId) async {
     try {
       var result = await _supabase.client.from('photo_rooms').upsert({
-        "images": images,
-        'room_Id': roomId,
+        'room_id': roomId,
+        'created_by': userId,
       }).select();
 
       if (result.isEmpty) {
@@ -23,16 +23,15 @@ class PhotoRoomRepository {
     }
   }
 
-// add  image to the photo room
-  Future<void> addImagesToPhotoRoom(List<String> images, String roomId) async {
+// add  image to the photo room and marks it with the id of the user that uploaded it
+  Future<void> addImagesToPhotoRoom(
+      String imageUrl, String roomId, String userId) async {
     try {
-      var response = await _supabase.client
-          .from('photo_rooms')
-          .update({
-            'images': images,
-          })
-          .eq('room_id', roomId)
-          .select();
+      var response = await _supabase.client.from('images').insert({
+        'room_id': roomId, // Associate the image with the room
+        'url': imageUrl, // Image URL
+        'uploaded_by': userId, // User who uploaded the image
+      }).select();
 
       if (response.isEmpty) {
         throw ('error');
@@ -44,15 +43,35 @@ class PhotoRoomRepository {
   }
 
   // delete a photoroom this option is only available to the person who created the room
-  Future<void> deletePhotoRoom(String roomId) async {
+  Future<void> deletePhotoRoom(String roomId, String currentUserId) async {
     try {
-      var reponse = await _supabase.client
+      var response = await _supabase.client
+          .from('photo_rooms')
+          .select('created_by') // Only fetch the created_by column
+          .eq('room_id', roomId)
+          .single(); // Ensure only one room is fetched
+
+      if (response.isEmpty) {
+        throw Exception('Failed to fetch room data');
+      }
+
+      //Check if the current user is the creator
+      String createdBy = response['created_by'];
+      if (createdBy != currentUserId) {
+        throw Exception('You are not authorized to delete this room');
+      }
+
+      var deleteResponse = await _supabase.client
           .from('photo_rooms')
           .delete()
-          .eq('photo_rooms', roomId);
-      if (reponse.error != null) {
-        throw Exception('failed to delete photoroom');
+          .eq('room_id', roomId)
+          .select();
+
+      if (deleteResponse.isEmpty) {
+        throw Exception('Failed to delete photo room');
       }
+
+      debugPrint('Photo room deleted successfully');
     } catch (e) {
       debugPrint('$e');
       throw Exception('there was an issue during this operation');
@@ -120,16 +139,21 @@ class PhotoRoomRepository {
   //get all images in a particular photo room
   Future<List<String>?> getAllPhotosInARoom(String roomId) async {
     try {
+      // Fetch images for the given room from the 'images' table
       final response = await _supabase.client
-          .from('photo_rooms')
-          .select('room_id')
-          .eq('room_id', roomId)
-          .single();
+          .from('images')
+          .select('url') // We only need the URL of the images
+          .eq('room_id',
+              roomId); // Ensure we only get images related to the given roomId
+
       if (response.isEmpty) {
-        throw Exception('no images found in this room');
+        throw Exception('No images found in this room');
       }
 
-      List<String> images = List<String>.from(response['photos']);
+      // Step 2: Map the response to a List of image URLs
+      List<String> images =
+          List<String>.from(response.map((image) => image['url']));
+
       return images;
     } catch (e) {
       debugPrint('error here');
