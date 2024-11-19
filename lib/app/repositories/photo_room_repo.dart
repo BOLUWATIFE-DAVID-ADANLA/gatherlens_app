@@ -42,6 +42,7 @@ class PhotoRoomRepository {
     }
   }
 
+
   // delete a photoroom this option is only available to the person who created the room
   Future<void> deletePhotoRoom(String roomId, String currentUserId) async {
     try {
