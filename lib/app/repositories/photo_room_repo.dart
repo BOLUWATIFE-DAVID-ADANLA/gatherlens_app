@@ -17,6 +17,12 @@ class PhotoRoomRepository {
       if (result.isEmpty) {
         throw Exception('falied to create photo room');
       }
+    // add creator to list of participants 
+       await _supabase.client.from('participants').upsert({
+      'user_id': userId,
+      'room_id': roomId,
+      'joined_at': DateTime.now().toIso8601String(),
+    }).select();
       debugPrint('Photo room created successfully!');
     } catch (e) {
       throw ('$e');
@@ -37,7 +43,7 @@ class PhotoRoomRepository {
         throw ('error');
       }
     } catch (e) {
-      debugPrint('$e');
+      debugPrint('$e');  
       throw ('there was an erro');
     }
   }
@@ -161,4 +167,19 @@ class PhotoRoomRepository {
       return [];
     }
   }
+
+// checks if user is the creator of a room 
+  Future<bool> isUserCreator(String roomId, String userId) async {
+  final response = await _supabase.client
+      .from('participants')
+      .select('role')
+      .eq('room_id', roomId)
+      .eq('user_id', userId)
+      .single();
+
+  if (response['role'] != 'creator') {
+    return false;
+  }
+  return true;
+}
 }

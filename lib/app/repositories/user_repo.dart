@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gatherlens/app/models/photo_room.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserRepository {
@@ -8,14 +7,13 @@ class UserRepository {
 
   // add user to db table
   Future<void> addUser(String email, String userid, String username,
-      List<PhotoRoom> photoroom) async {
+      ) async {
     try {
       var response = await _supabase.client.from('user').upsert({
         'email': email,
         'username': username,
         'user_id': userid,
         'created_at': DateTime.now().toIso8601String(),
-        'photo_rooms': photoroom,
       }).select();
 
       if (response.isEmpty) {
