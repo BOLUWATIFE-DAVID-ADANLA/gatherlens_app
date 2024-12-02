@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gatherlens/app/repositories/photo_room_repo.dart';
 import 'package:gatherlens/app/repositories/supabase_strorage_repo.dart';
 
 class PhotoRoomController {
   final SupabaseStrorageRepo _strorageRepo;
   final PhotoRoomRepository _photoRoomRepository;
+  final Ref ref;
 
-  PhotoRoomController(this._photoRoomRepository, this._strorageRepo);
-
+  PhotoRoomController(this._photoRoomRepository, this._strorageRepo, this.ref);
   // create a photo room and stroage bucket
   Future<void> createPhotoRoomBAndBucket(String roomId, String userId) async {
     try {
@@ -46,6 +47,14 @@ class PhotoRoomController {
   Future<void> joinRoom(String roomId, String userId, String roomName) async {
     try {
       await _photoRoomRepository.joinPhotoRoom(roomId, userId, roomName);
+    } catch (e) {
+      debugPrint(e.toString());
+      throw Exception('an error occured ');
+    }
+  }
+
+  Future<void> fetchPhotoforaroom(String roomId) async {
+    try {
       await _photoRoomRepository.getAllPhotosInARoom(roomId);
     } catch (e) {
       debugPrint(e.toString());

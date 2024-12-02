@@ -17,12 +17,12 @@ class PhotoRoomRepository {
       if (result.isEmpty) {
         throw Exception('falied to create photo room');
       }
-    // add creator to list of participants 
-       await _supabase.client.from('participants').upsert({
-      'user_id': userId,
-      'room_id': roomId,
-      'joined_at': DateTime.now().toIso8601String(),
-    }).select();
+      // add creator to list of participants
+      await _supabase.client.from('participants').upsert({
+        'user_id': userId,
+        'room_id': roomId,
+        'joined_at': DateTime.now().toIso8601String(),
+      }).select();
       debugPrint('Photo room created successfully!');
     } catch (e) {
       throw ('$e');
@@ -43,11 +43,10 @@ class PhotoRoomRepository {
         throw ('error');
       }
     } catch (e) {
-      debugPrint('$e');  
+      debugPrint('$e');
       throw ('there was an erro');
     }
   }
-
 
   // delete a photoroom this option is only available to the person who created the room
   Future<void> deletePhotoRoom(String roomId, String currentUserId) async {
@@ -109,7 +108,7 @@ class PhotoRoomRepository {
   }
 
 //  this gets all the photorooms a user is a part of
-  Future<List<PhotoRoom>> getPhotoRoomsForUser(String userId) async {
+  Stream<List<PhotoRoom>> getPhotoRoomsForUser(String userId) async* {
     try {
       final response = await _supabase.client
           .from('participants')
@@ -123,23 +122,17 @@ class PhotoRoomRepository {
       List<String> roomid =
           List<String>.from(response.map((room) => room['room_id']));
 
-      final roomResponse = await _supabase.client
+      final roomResponse = _supabase.client
           .from('photo_rooms')
-          .select()
-          .inFilter('room_id', roomid);
+          .stream(primaryKey: ['room_id'])
+          .inFilter('room_id', roomid)
+          .map((data) =>
+              data.map<PhotoRoom>((room) => PhotoRoom.fromJson(room)).toList());
 
-      if (roomResponse.isEmpty) {
-        throw Exception('Failed to fetch photo room details');
-      }
-
-      List<PhotoRoom> rooms = roomResponse
-          .map<PhotoRoom>((roomData) => PhotoRoom.fromJson(roomData))
-          .toList();
-
-      return rooms;
+      yield* roomResponse;
     } catch (e) {
       debugPrint('Error fetching photo rooms for user: $e');
-      return [];
+      yield [];
     }
   }
 
@@ -168,18 +161,18 @@ class PhotoRoomRepository {
     }
   }
 
-// checks if user is the creator of a room 
+// checks if user is the creator of a room
   Future<bool> isUserCreator(String roomId, String userId) async {
-  final response = await _supabase.client
-      .from('participants')
-      .select('role')
-      .eq('room_id', roomId)
-      .eq('user_id', userId)
-      .single();
+    final response = await _supabase.client
+        .from('participants')
+        .select('role')
+        .eq('room_id', roomId)
+        .eq('user_id', userId)
+        .single();
 
-  if (response['role'] != 'creator') {
-    return false;
+    if (response['role'] != 'creator') {
+      return false;
+    }
+    return true;
   }
-  return true;
-}
 }

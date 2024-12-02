@@ -1,7 +1,10 @@
 import 'package:camera/camera.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:gatherlens/app/views/camera_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gatherlens/app/routes/app_pages.dart';
+import 'package:gatherlens/app/util/navigator_helper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,17 +17,17 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljZGxudXhjYmNpd2F4anZqeHFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTg4MzEsImV4cCI6MjA0NzE3NDgzMX0.yv__4y1PKwuryAt7YFifEv7bQnvSk92DScEQhzfkUhk',
   );
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
@@ -48,9 +51,11 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      navigatorKey: ref.read(navigationServiceProvider).navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: CameraView(),
+      initialRoute: AppPages.initial,
+      onGenerateRoute: AppPages.onGenerateRoutes,
     );
   }
 }
